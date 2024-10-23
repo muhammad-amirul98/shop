@@ -6,6 +6,7 @@ import com.firstproject.shop.model.Product;
 import com.firstproject.shop.repository.CategoryRepository;
 import com.firstproject.shop.repository.ProductRepository;
 import com.firstproject.shop.request.AddProductRequest;
+import com.firstproject.shop.request.UpdateProductRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -58,8 +59,23 @@ public class ProductService implements IProductService {
     //productRepository::delete is a method reference, which is shorthand for product -> productRepository.delete(product).
 
     @Override
-    public void updateProduct(Product product, Long productId) {
+    public Product updateProduct(UpdateProductRequest request, Long id) {
+        return productRepository.findById(id)
+                .map(existingProduct -> updateExistingProduct(existingProduct, request))
+                .map(productRepository::save)
+                .orElseThrow(() -> new ProductNotFoundException("Product Not Found"));
+    }
 
+    private Product updateExistingProduct(Product existingProduct, UpdateProductRequest request) {
+        existingProduct.setName(request.getName());
+        existingProduct.setBrand(request.getBrand());
+        existingProduct.setDescription(request.getDescription());
+        existingProduct.setPrice(request.getPrice());
+        existingProduct.setInventory(request.getInventory());
+
+        Category category = categoryRepository.findByName(request.getCategory().getName());
+        existingProduct.setCategory(category);
+        return existingProduct;
     }
 
     @Override
